@@ -1,0 +1,26 @@
+import joblib
+import lightgbm as lgb
+import pandas as pd
+from config import PROCESSED, MODELS, DATASETS, TARGET, LGB_PARAMS
+from preprocess import split
+
+for name in DATASETS:
+    df = pd.read_csv(PROCESSED / f"{name.lower()}.csv", index_col=0, parse_dates=True)
+    tr, va, _ = split(df)
+    # other datas, OT datas in training
+    X_tr, y_tr = tr.drop(columns=TARGET), tr[TARGET]
+    # other datas, OT datas in validataion
+    X_va, y_va = va.drop(columns=TARGET), va[TARGET]
+
+    model = lgb.LGBMRegressor(**LGB_PARAMS)
+    model.fit(
+        X_tr, y_tr,
+        eval_set=[(X_va, y_va)],
+        eval_metric="l1",
+        callbacks=[lgb.early_stopping(100), lgb.log_evaluation(200)],
+    )
+    
+    # store the model, the extension of pkl does not have meaning and it is convention in python 
+    joblib.dump(model, MODELS / f"lgb_{name.lower()}.pkl")
+    # show the best number of  trees(more than 3000, increase n_estimators, increase learning_rate)
+    print(f"{name}: best iteration = {model.best_iteration_}")
