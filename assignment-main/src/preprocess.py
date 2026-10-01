@@ -1,5 +1,6 @@
 import pandas as pd
-from config import (RAW, PROCESSED, DATASETS, TARGET, HORIZON, LAGS, ROLLS, TRAIN_RATIO, VAL_RATIO)
+from config import (RAW, PROCESSED, DATASETS, TARGET, HORIZON, LAGS, ROLLS, TRAIN_RATIO, VAL_RATIO,
+                    USE_MONTH)
 
 LOAD_COLS = ["HUFL", "HULL", "MUFL", "MULL", "LUFL", "LULL"]
 
@@ -17,7 +18,8 @@ def make_features(df, freq):
     # calendar features
     X["hour"] = df.index.hour
     X["dayofweek"] = df.index.dayofweek
-    X["month"] = df.index.month
+    if USE_MONTH:
+        X["month"] = df.index.month
     if freq == "m":
         X["minute"] = df.index.minute
 
