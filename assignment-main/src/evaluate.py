@@ -22,7 +22,8 @@ for name in DATASETS:
 
     # load the models which finished training and validation and predict OT
     model = joblib.load(MODELS / f"lgb_{name.lower()}.pkl")
-    pred = model.predict(X_te)
+    # the model predicts the change, so add it to the last known OT to get the OT value
+    pred = model.predict(X_te) + X_te[f"OT_lag{HORIZON}"].to_numpy()
 
     # naive baseline: predict the last known OT. LightGBM must get a lower error (MAE/RMSE) than this
     naive = X_te[f"OT_lag{HORIZON}"]
