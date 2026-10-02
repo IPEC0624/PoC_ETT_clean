@@ -20,21 +20,28 @@ sns.set_theme(style="whitegrid", rc={
     "axes.titleweight": "bold", "axes.titlesize": 12, "lines.linewidth": 2,
 })
 
-
+# load csv file
 def load(name):
     return pd.read_csv(RAW / f"{name}.csv", parse_dates=["date"]).set_index("date")
 
-
+# split the rows
 def period_bounds(df):
     n = len(df)
     return df.index[int(n * TRAIN_RATIO)], df.index[int(n * (TRAIN_RATIO + VAL_RATIO))]
 
-
+# save the files
 def save(fig, file):
     fig.tight_layout()
     fig.savefig(EDA / file, dpi=200)
     plt.close(fig)
 
+# mean OT in the train period vs the test period
+for name in ["ETTh1", "ETTh2"]:
+    df = load(name)
+    t_val, t_test = period_bounds(df)
+    train_mean = df.loc[:t_val, TARGET].mean()
+    test_mean = df.loc[t_test:, TARGET].mean()
+    print(f"{name}: mean OT train {train_mean:.1f}°C -> test {test_mean:.1f}°C")
 
 # 1. OT over time with train / val / test periods (daily mean for readability)
 fig, axes = plt.subplots(2, 1, figsize=(12, 5.5), sharex=True)
@@ -46,6 +53,7 @@ for ax, name in zip(axes, ["ETTh1", "ETTh2"]):
     ax.axvspan(t_test, df.index[-1], color=ORANGE, alpha=0.10, lw=0)
     ax.plot(daily.index, daily.values, color=BLUE, lw=1.5)
     ax.set(title=f"{name}: daily mean OT", ylabel="OT (°C)")
+    # top of y-axis
     top = ax.get_ylim()[1]
     for x, label in [(df.index[0], "train 60%"), (t_val, "val 10%"), (t_test, "test 30%")]:
         ax.text(x, top, f" {label}", va="top", ha="left", color=MUTED, fontsize=9)
